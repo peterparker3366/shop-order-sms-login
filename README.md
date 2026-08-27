@@ -70,3 +70,7 @@ Quick start is above. For a real deployment you'll also need: The details below 
 **Shop Order SMS Login: SMS (required for real sending)**
 - **Shop Order SMS Login:** Many carriers and regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
 - **Shop Order SMS Login:** Sandbox and test numbers may work without it; production traffic will not.
+
+## Further reading
+
+- [US/EU SaaS Email API Cost: Resend, Postmark, SendGrid, MailerSend, and Node.js](docs/us-eu-saas-email-api-cost-resend-postmark-sendgri-c7pmwb.md)
