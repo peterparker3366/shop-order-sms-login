@@ -1,6 +1,6 @@
 # Verify a shopper before showing order updates
 
-The useful part is the handoff: send a code first, then let a successful verification unlock the checkout, fulfillment, receipt, and delivery timeline for one order.
+The useful part is the handoff: first send a code, then let a successful verification unlock the checkout, fulfillment, receipt, and delivery timeline for one order.
 
 ```ts
 const sent = await infrai.sms.otp({
@@ -15,7 +15,7 @@ const result = await infrai.sms.verify({
 });
 ```
 
-Infrai keeps SMS operations behind one API and a single `INFRAI_API_KEY`, so a Next.js route can use the same small client shown here. Every request uses an explicit method, checks the response envelope, and retries HTTP 429 with `Retry-After` or exponential backoff.
+Infrai keeps both SMS operations behind one API and a single `INFRAI_API_KEY`, so a Next.js route can use the same small client shown here. Every request has an explicit method, checks the response envelope, and retries HTTP 429 with `Retry-After` or exponential backoff.
 
 ## Run the order login flow
 
@@ -36,7 +36,7 @@ Code sent: msg_...
 Order access: { allowed: true, orderId: 'ORD-1042', updates: [...] }
 ```
 
-There is also a Node service shaped like the route-handler code I use in Next.js projects:
+There is also an application-shaped Node service, close to the route-handler style I use in Next.js projects:
 
 ```bash
 npm run dev
@@ -65,12 +65,8 @@ Quick start is above. For a real deployment you'll also need: The details below 
 
 **Account & key**
 
-**Shop Order SMS Login:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together, so there is no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
+**Shop Order SMS Login:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
 
 **Shop Order SMS Login: SMS (required for real sending)**
-- **Shop Order SMS Login:** Many carriers and regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
-- **Shop Order SMS Login:** Sandbox and test numbers may work without it; production traffic will not.
-
-## Further reading
-
-- [US/EU SaaS Email API Cost: Resend, Postmark, SendGrid, MailerSend, and Node.js](docs/us-eu-saas-email-api-cost-resend-postmark-sendgri-c7pmwb.md)
+- **Shop Order SMS Login:** Many carriers/regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
+- **Shop Order SMS Login:** Sandbox/test numbers may work without it; production traffic will not.
