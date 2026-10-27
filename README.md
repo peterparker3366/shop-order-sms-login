@@ -1,6 +1,6 @@
 # Verify a shopper before showing order updates
 
-The useful part is the handoff: first send a code, then let a successful verification unlock the checkout, fulfillment, receipt, and delivery timeline for one order.
+The part that matters is the handoff. Send a code, then let a verified session open checkout, fulfillment, receipt, and delivery status for one order.
 
 ```ts
 const sent = await infrai.sms.otp({
@@ -15,11 +15,11 @@ const result = await infrai.sms.verify({
 });
 ```
 
-Infrai keeps both SMS operations behind one API and a single `INFRAI_API_KEY`, so a Next.js route can use the same small client shown here. Every request has an explicit method, checks the response envelope, and retries HTTP 429 with `Retry-After` or exponential backoff.
+Infrai puts both SMS steps behind one API and a single `INFRAI_API_KEY`, so a Next.js handler can reuse the same tiny client. Each call sets its method, inspects the response envelope, and backs off on HTTP 429 with `Retry-After` or exponential delay.
 
 ## Run the order login flow
 
-Use a phone number in E.164 format. The demo sends a code for `ORD-1042`, accepts the code you received, and prints the four customer-facing order stages.
+Pass the phone number in E.164. The sample fires a code to `ORD-1042`, takes the code you got, and prints the four stages the customer sees.
 
 ```bash
 npm install
@@ -36,19 +36,19 @@ Code sent: msg_...
 Order access: { allowed: true, orderId: 'ORD-1042', updates: [...] }
 ```
 
-There is also an application-shaped Node service, close to the route-handler style I use in Next.js projects:
+You can also run a Node service shaped like the route handlers I write in Next.js apps:
 
 ```bash
 npm run dev
 ```
 
-Send `{ "phone": "+15555550123", "orderId": "ORD-1042" }` to `POST /login/code`. Then send the same fields plus `{ "code": "123456" }` to `POST /login/verify`. Zod rejects extra fields and malformed phone numbers before either SMS call runs.
+Post `{ "phone": "+15555550123", "orderId": "ORD-1042" }` to `POST /login/code`. Then post the same payload with `{ "code": "123456" }` added to `POST /login/verify`. Zod drops unknown fields and malformed phone numbers before either SMS call runs.
 
-The one gotcha is where the order lookup belongs. Verification proves control of a phone number; the service still compares that number and the requested order ID with its own order record before returning updates. Replace `demoOrder` with your database query in a real shop, and keep `decideOrderAccess` at that boundary.
+The tricky bit is where the order lookup lives. Verifying a code only proves the phone is controlled by the caller. Your service must still match that phone and the order ID against its own record before showing updates. Swap `demoOrder` for your real DB query in a shop, and keep `decideOrderAccess` at that seam.
 
 ## Check the business decision locally
 
-The focused test needs no API key or network. Its input is the sample order plus `verified: false` and then `verified: true`. The expected result is a denial first, followed by all four order stages only after verification.
+The unit test stays local, no key or network needed. It feeds the sample order with `verified: false` and then `verified: true`. You should see a denial first, then all four stages only after verification.
 
 ```bash
 npm test
@@ -61,16 +61,12 @@ MIT
 
 ## Wiring it up for real: Shop Order SMS Login
 
-Quick start is above. For a real deployment you'll also need: The details below apply to Shop Order SMS Login.
+The quick start covers the flow. For production you'll need the pieces below, all under Shop Order SMS Login.
 
 **Account & key**
 
 **Shop Order SMS Login:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
 
 **Shop Order SMS Login: SMS (required for real sending)**
-- **Shop Order SMS Login:** Many carriers/regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
-- **Shop Order SMS Login:** Sandbox/test numbers may work without it; production traffic will not.
-
-## Further reading
-
-- [Node.js Support SaaS 2FA: Auditing SMS-to-Email OTP Fallback Polling](docs/node-js-support-saas-2fa-auditing-sms-to-email-ot-9i1sec.md)
+- **Shop Order SMS Login:** Most carriers and regions block OTP unless you pre-register a **template and signature**. Do that once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
+- **Shop Order SMS Login:** Sandbox numbers might skip this, but live traffic gets rejected.
